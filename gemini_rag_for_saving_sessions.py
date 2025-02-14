@@ -247,12 +247,7 @@ def upload_pdf():
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
         splits = text_splitter.split_documents(docs)
 
-        # Generate embeddings for the text splits
-        split_texts = [doc.page_content for doc in splits]  # Extract text content
-        embeddings_list = embeddings.embed_documents(split_texts)  # Generate embeddings
-
-        # Add the document embeddings to FAISS index
-        vector_store.add_embeddings(embeddings_list, split_texts)  # Add texts + embeddings
+        vector_ids = vector_store.add_documents(splits)
 
         # Save the updated FAISS index
         vector_store.save_local("faiss_index")
