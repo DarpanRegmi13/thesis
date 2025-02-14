@@ -1,0 +1,256 @@
+
+/* General Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background-color: #F9FAFB;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+
+/* Chat Container */
+.chat-container {
+    width: 80%;
+    max-width: 900px;
+    margin: 50px auto 20px; /* More spacing below header */
+    background: #F4F7FC; /* Soft Grayish Blue */
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Enlarged Chat Box */
+.chat-box {
+    height: 520px; /* Increased height */
+    max-height: 65vh;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    padding: 10px;
+    background: #FFFFFF; /* Pure White for readability */
+    border-radius: 5px;
+    text-align: left;
+}
+
+.chat-box::-webkit-scrollbar {
+    width: 8px;
+}
+
+.chat-box::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+/* Chat Form */
+form {
+    display: flex;
+    margin-top: 15px;
+}
+
+input[type="text"] {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+#save-chat-btn {
+    display: block;
+    margin-top: 20px; /* Adjust this value to move it lower */
+    padding: 12px 15px;
+    background-color: #017374;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: 0.3s;
+}
+
+#save-chat-btn:hover {
+    background-color: #014F4D;
+}
+
+#load-chat-btn {
+    display: block;
+    margin-top: 20px; /* Adjust this value to move it lower */
+    padding: 12px 15px;
+    background-color: #017374;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: 0.3s;
+}
+
+#load-chat-btn:hover {
+    background-color: #014F4D;
+}
+
+/* Buttons */
+button {
+    padding: 12px 15px;
+    margin-left: 10px;
+    border: none;
+    background-color: #017374; /* Dark Teal */
+    color: #fff;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: 0.3s;
+}
+
+button:hover {
+    background-color: #014F4D; /* Darker Teal */
+}
+
+/* PDF Upload Section */
+.upload-section {
+    background: #fff;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 80%;
+    max-width: 900px;
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.upload-section h2 {
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+/* Load Chat Section */
+section {
+    width: 80%;
+    max-width: 900px;
+    margin: 20px auto;
+    text-align: left;
+    margin-bottom: 100px;
+}
+
+
+.loaded-chat-container {
+    position: relative;  /* Let it follow the document flow */
+    width: 80%;
+    max-width: 600px;
+    height: auto;  /* Let the height adjust based on content */
+    background-color: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    padding: 20px;
+    margin-top: 20px;  /* Ensure there's space above the loaded chat */
+    margin-bottom: 120px;  /* Space below */
+    display: flex;
+    flex-direction: column;
+}
+
+.loaded-chat-container h2 {
+    text-align: center;
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.loaded-chat-container .user-msg,
+.loaded-chat-container .ai-msg {
+    padding: 8px;
+    margin-bottom: 8px;
+    border-radius: 5px;
+    text-align: left;
+}
+
+.loaded-chat-container .user-msg {
+    background-color: #e0e0e0;
+}
+
+.loaded-chat-container .ai-msg {
+    background-color: #cce5ff;
+}
+
+.loaded-chat-container button {
+    align-self: center;
+    padding: 5px 10px;
+    margin-top: 10px;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.loaded-chat-container button:hover {
+    background-color: #d32f2f;
+}
+
+footer {
+    background-color: #1E1E2F;
+    margin-top: 200px;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    position: fixed;  /* Use fixed positioning */
+    bottom: 0;        /* Stick it to the bottom of the page */
+    left: 0;          /* Ensure it spans the full width */
+    width: 100%;      /* Full width of the page */
+    z-index: 10;      /* Ensure it's above other content */
+}
+
+h1, h2 {
+    color: #2c3e50;
+}
+
+.reload-pdf-section {
+    background: #fff;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 80%;
+    max-width: 900px;
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.reload-pdf-section h2 {
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+#delete-file {
+    width: 200px; /* Adjust the width as needed */
+    max-width: 100%; /* Ensures responsiveness */
+    margin: 10px;
+}
+
+#delete-pdf-form button {
+    margin-left: 10px; /* Adjust this to add space between the select and button */
+}
+
+.manage-pdf-section {
+    background: #fff;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 80%;
+    max-width: 900px;
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.manage-pdf-section h2 {
+    font-size: 20px;
+    margin-bottom: 10px;
+}
