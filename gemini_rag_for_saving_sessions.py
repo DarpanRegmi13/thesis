@@ -35,7 +35,7 @@ model = ChatGoogleGenerativeAI(api_key=api_key, model="gemini-1.5-flash")
 embeddings = GoogleGenerativeAIEmbeddings(google_api_key=api_key, model="models/embedding-001")
 
 # Directory for PDF files
-pdf_directory = "./pdf_files"  # Change to your folder path
+pdf_directory = "./pdf_files"
 docs = []
 
 # Load FAISS index directly from disk
@@ -128,7 +128,9 @@ def save_chat():
         print(f"Error saving chat history: {e}")
         return jsonify({'success': False, 'error': str(e)})
 
-
+import requests
+from mitrecve import crawler
+from pprint import pprint
 
 @app.route('/ask', methods=['POST'])
 def ask():
@@ -136,23 +138,81 @@ def ask():
     question = data['question'].strip()  # Normalize input
 
     try:
-        response = rag_chain.invoke(question)
+        # Check if the question mentions a known vulnerability or software name
+        is_vulnerability_related = analyze_for_vulnerability(question)
 
-        # Handle cases where RAG fails
-        if not response.strip() or "Hmmm! I don't know" in response:
-            response = "I'm not entirely sure, but I can try to help! Could you provide more details or ask in a different way?"
+        if is_vulnerability_related:
+            # Extract the name of the software or vulnerability from the question
+            software_name = extract_software_name(question)
 
-        # Apply formatting for better readability
-        formatted_response = format_response(response)
+            if software_name:
+                # Fetch CVE information for the software name from MITRE CVE
+                cve_info = crawler.get_main_page(software_name)  # Query MITRE for CVE info related to the name
+                cve_details = crawler.get_cve_detail(cve_info)  # Get detailed CVE information
+                response = json.dumps(cve_details, indent=4)
+            else:
+                # If it's a file name like "ip_input.c", use the CIRCL API to search for CVEs related to the file
+                cve_info = fetch_cve_from_circl(question)
+                if cve_info:
+                    response = json.dumps(cve_info, indent=4)
+                else:
+                    response = "I couldn't find any CVE information related to the file or software. Could you clarify?"
+        else:
+            # If not related to CVE, use RAG chain to process the question
+            response = rag_chain.invoke(question)
 
-        return jsonify({
-            'answer': formatted_response,
-        })
+            # Handle cases where RAG fails
+            if not response.strip() or "Hmmm! I don't know" in response:
+                response = "I'm not entirely sure, but I can try to help! Could you provide more details or ask in a different way?"
+
+            # Apply formatting for better readability
+            response = format_response(response)
+
+        return jsonify({'answer': response})
 
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({'error': 'Something went wrong, but feel free to ask me again!'})
 
+
+def analyze_for_vulnerability(question):
+    """Analyze the question to determine if it mentions a known vulnerability or software."""
+    vulnerability_keywords = ["vulnerability", "bug", "exploit", "security flaw", "CVE", "issue", "weakness"]
+
+    if any(keyword.lower() in question.lower() for keyword in vulnerability_keywords):
+        return True
+    return False
+
+
+def extract_software_name(question):
+    """Extract the software or vulnerability name from the user's question."""
+    # Simple logic to extract software names like "apache", "ip_input.c", etc.
+    known_software = ["apache", "nginx", "mysql", "jython", "python", "openssl"]
+    
+    # Check if the question contains a software name
+    for software in known_software:
+        if software.lower() in question.lower():
+            return software
+    # Check if it mentions a file name (like ip_input.c, etc.)
+    if '.c' in question.lower():
+        return question.lower().split(' ')[-1]  # Extract the file name after "vulnerability in"
+    return None
+
+
+def fetch_cve_from_circl(file_name):
+    """Fetch CVE information from the CIRCL API using the file name."""
+    base_url = "https://cve.circl.lu/api/last"
+    params = {"search": file_name}
+    try:
+        response = requests.get(base_url, params=params)
+        if response.status_code == 200:
+            data = response.json()
+            return data.get('results', [])
+        else:
+            return None
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching data from CIRCL: {e}")
+        return None
 
 def format_response(response):
     """Formats the chatbot's response for a more readable and friendly tone.""" 
