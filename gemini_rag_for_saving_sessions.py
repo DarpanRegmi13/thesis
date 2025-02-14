@@ -16,7 +16,7 @@ import json
 app = Flask(__name__)
 CORS(app)
 
-SESSIONS_FOLDER = './sessions'  # Change this to the actual path where chat histories are saved
+SESSIONS_FOLDER = './sessions'
 
 # Create the sessions folder if it doesn't exist
 if not os.path.exists(SESSIONS_FOLDER):
@@ -56,6 +56,8 @@ If the context doesn't contain sufficient information to fully answer the questi
 
 If the user asks for a step-by-step process, provide a structured, easy-to-follow breakdown with as much detail as needed.
 
+If the user asks for 
+
 If the question is a greeting or casual, non-technical inquiry, respond politely and helpfully but keep the focus on being professional. For instance, you can acknowledge the greeting or express a willingness to assist.
 
 If the user asks for something unrelated, such as asking for pictures or general advice outside of incident response, you can say:
@@ -79,9 +81,6 @@ Provide the answer as follows:
 """
 
 prompt = PromptTemplate(template=template)
-
-
-
 
 # Build the RAG chain
 rag_chain = (
@@ -128,37 +127,77 @@ def save_chat():
         print(f"Error saving chat history: {e}")
         return jsonify({'success': False, 'error': str(e)})
 
-import requests
-from mitrecve import crawler
-from pprint import pprint
+from mitrecve import crawler  # Assuming the CVE crawler is available
+import re
 
+# Function to check if a query starts with 'mitrecve' and return the rest of the query
+def is_cve_query(question):
+    question_lower = question.strip().lower()
+    
+    # Check if the query starts with 'mitrecve'
+    if question_lower.startswith('mitrecve'):
+        # Remove 'mitrecve' from the beginning of the string
+        return question_lower[len('mitrecve'):].strip()  # Return the rest of the query after removing 'mitrecve'
+    return None  # Return None if 'mitrecve' is not at the start
+
+# Function to fetch CVE information for the remaining part of the query
+def fetch_cve_info(target):
+    try:
+        # Use the crawler to get the CVE page for the remaining part (which can be any software, URL, etc.)
+        cve_simple = crawler.get_main_page(target)
+        
+        # Fetch detailed CVE information from the page
+        cve_details = crawler.get_cve_detail(cve_simple)
+        
+        # Format and return the details for the response
+        if cve_details:
+            return format_cve_details(cve_details)
+        else:
+            return f"Sorry, I couldn't find any CVE information for '{target}' at the moment."
+    
+    except Exception as e:
+        print(f"Error fetching CVE info: {e}")
+        return "I encountered an issue while fetching the CVE details. Please try again later."
+
+# Function to format CVE details for chatbot display
+def format_cve_details(cve_details):
+    formatted_response = ""
+    
+    # Iterate through the CVE details dictionary
+    for index, cve in cve_details.items():
+        formatted_response += f"<b>CVE ID:</b> {cve['ID']}<br>"
+        formatted_response += f"<b>Description:</b> {cve['DESC']}<br>"
+        formatted_response += f"<b>Release Date:</b> {cve['RELEASE_DATE']}<br>"
+        formatted_response += f"<b>CNA:</b> {cve['CNA']}<br>"
+        
+        # Add a clickable NVD URL
+        formatted_response += f"<b>NVD URL:</b> <a href='{cve['NVD_URL']}' target='_blank'>{cve['NVD_URL']}</a><br>"
+        
+        # Add space between CVEs
+        formatted_response += "<br>"
+
+    # Ensure proper formatting for web display
+    formatted_response = formatted_response.replace("\n", "<br>")
+    
+    # Return the formatted response
+    formatted_response = f'<div style="text-align: left; font-family: poppins, sans-serif;">{formatted_response}</div>'
+    
+    return formatted_response
+
+# Route for handling the chatbot query
 @app.route('/ask', methods=['POST'])
 def ask():
     data = request.get_json()
     question = data['question'].strip()  # Normalize input
 
     try:
-        # Check if the question mentions a known vulnerability or software name
-        is_vulnerability_related = analyze_for_vulnerability(question)
-
-        if is_vulnerability_related:
-            # Extract the name of the software or vulnerability from the question
-            software_name = extract_software_name(question)
-
-            if software_name:
-                # Fetch CVE information for the software name from MITRE CVE
-                cve_info = crawler.get_main_page(software_name)  # Query MITRE for CVE info related to the name
-                cve_details = crawler.get_cve_detail(cve_info)  # Get detailed CVE information
-                response = json.dumps(cve_details, indent=4)
-            else:
-                # If it's a file name like "ip_input.c", use the CIRCL API to search for CVEs related to the file
-                cve_info = fetch_cve_from_circl(question)
-                if cve_info:
-                    response = json.dumps(cve_info, indent=4)
-                else:
-                    response = "I couldn't find any CVE information related to the file or software. Could you clarify?"
+        # Check if the query starts with 'mitrecve' and process the rest
+        target = is_cve_query(question)
+        if target:
+            # Fetch CVE information if it's a CVE query
+            response = fetch_cve_info(target)
         else:
-            # If not related to CVE, use RAG chain to process the question
+            # For any other query, use RAG chain or standard response
             response = rag_chain.invoke(question)
 
             # Handle cases where RAG fails
@@ -174,54 +213,13 @@ def ask():
         print(f"Error: {e}")
         return jsonify({'error': 'Something went wrong, but feel free to ask me again!'})
 
-
-def analyze_for_vulnerability(question):
-    """Analyze the question to determine if it mentions a known vulnerability or software."""
-    vulnerability_keywords = ["vulnerability", "bug", "exploit", "security flaw", "CVE", "issue", "weakness"]
-
-    if any(keyword.lower() in question.lower() for keyword in vulnerability_keywords):
-        return True
-    return False
-
-
-def extract_software_name(question):
-    """Extract the software or vulnerability name from the user's question."""
-    # Simple logic to extract software names like "apache", "ip_input.c", etc.
-    known_software = ["apache", "nginx", "mysql", "jython", "python", "openssl"]
-    
-    # Check if the question contains a software name
-    for software in known_software:
-        if software.lower() in question.lower():
-            return software
-    # Check if it mentions a file name (like ip_input.c, etc.)
-    if '.c' in question.lower():
-        return question.lower().split(' ')[-1]  # Extract the file name after "vulnerability in"
-    return None
-
-
-def fetch_cve_from_circl(file_name):
-    """Fetch CVE information from the CIRCL API using the file name."""
-    base_url = "https://cve.circl.lu/api/last"
-    params = {"search": file_name}
-    try:
-        response = requests.get(base_url, params=params)
-        if response.status_code == 200:
-            data = response.json()
-            return data.get('results', [])
-        else:
-            return None
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching data from CIRCL: {e}")
-        return None
-
 def format_response(response):
-    """Formats the chatbot's response for a more readable and friendly tone.""" 
+    """Formats the chatbot's response for a more readable and friendly tone."""
     response = response.replace("**", "")  # Remove bold markers if any
     response = response.replace("* ", "🔹 ")  # Convert bullet points to emojis
     response = response.replace("\n", "<br>")  # Ensure proper spacing for web display
     formatted_response = f'<div style="text-align: left;">{response}</div>'
 
-    # Add a friendly follow-up
     return formatted_response
 
 
@@ -245,12 +243,16 @@ def upload_pdf():
         loader = PyPDFLoader(pdf_path)
         docs = loader.load()
         
-        # Split the document and create embeddings
+        # Split the document into smaller chunks
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
         splits = text_splitter.split_documents(docs)
 
+        # Generate embeddings for the text splits
+        split_texts = [doc.page_content for doc in splits]  # Extract text content
+        embeddings_list = embeddings.embed_documents(split_texts)  # Generate embeddings
+
         # Add the document embeddings to FAISS index
-        vector_ids = vector_store.add_documents(splits)
+        vector_store.add_embeddings(embeddings_list, split_texts)  # Add texts + embeddings
 
         # Save the updated FAISS index
         vector_store.save_local("faiss_index")
@@ -259,8 +261,9 @@ def upload_pdf():
     else:
         return jsonify({'error': 'Invalid file type. Only PDF files are allowed.'})
 
+
 # Directory for PDFs and FAISS index
-pdf_directory = "./pdf_files"  # Make sure this is your actual directory for PDFs
+pdf_directory = "./pdf_files"
 faiss_index_path = "faiss_index"
 
 # Route to list all PDFs in the directory
