@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>detectTHEthreat</title>
+    <link rel="stylesheet" href="C:/Users/DELL/VS_Code_Files/thesis/index.css">
+    <link rel="stylesheet" href="static/nids.css">
+    <link rel="stylesheet" href="C:/Users/DELL/VS_Code_Files/thesis/threat_detect_&_analyze.css">
+    <script src="about.js" defer></script>
+    <style>
+        #download-btn {
+            display: none;
+        }
+    </style>
+    <link
+            rel="stylesheet"
+            href="https://pyscript.net/snapshots/2024.9.2/core.css"
+        />
+    <script
+        type="module"
+        src="https://pyscript.net/snapshots/2024.9.2/core.js"
+    ></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="#" class="logo"><i class="fas fa-search"></i>IncidenceResp<i class="fas fa-user-secret"></i>nseAI</a>
+            <a href="ai.html">Ask IR-🤖</a>
+            <a href="Threat Detection and Analysis.html">Extra Features</a>
+            <a href="contact.html">Contact Us</a>
+        </nav>
+    </header>
+
+    <h4>This section is still on development process. As a staff you can still use the services.</h4>
+    <h4>But this is demo for future reference and enhancements.</h4>
+
+    <section>
+        <h1>Live Traffic Capture</h1>
+        <label for="targetIp">Enter Target IP:</label>
+        <input type="text" id="targetIp" placeholder="Enter IP Address" />
+    
+        <button class="btn" onclick="startCapture1()">Start Capturing</button>
+        <button class="btn" onclick="stopCapture1()">Stop Capturing</button>
+        <button class="btn" onclick="saveDatabase1()">Save Data</button>
+
+        <div id="live-traffic">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Source IP</th>
+                        <th>Destination IP</th>
+                        <th>Protocol</th>
+                        <th>Port</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody id="traffic-data">
+                    <!-- Traffic rows will be added here -->
+                </tbody>
+            </table>
+        </div>
+    </section>
+    <div class="login">
+        <h1>Network Intrusion Detection System</h1>
+    
+        <!-- Main Input Form For Receiving Query to our ML -->
+        <form id="predictionForm">
+          <label for="attack">Attack:</label>
+          <select name="attack" id="attack">
+            <option value="0">Other</option>
+            <option value="1">neptune</option>
+            <option value="2">normal</option>
+            <option value="3">satan</option>
+          </select><br><br>
+    
+          <label for="count">Number of connections to the same destination host as the current connection in the past two seconds:</label>
+          <input type="text" name="count" id="count" placeholder="count" required /><br><br>
+    
+          <label for="dst_host_diff_srv_rate">The percentage of connections that were to different services:</label>
+          <input type="text" name="dst_host_diff_srv_rate" id="dst_host_diff_srv_rate" placeholder="dst_host_diff_srv_rate" required /><br><br>
+    
+          <label for="dst_host_same_src_port_rate">The percentage of connections to the same source port:</label>
+          <input type="text" name="dst_host_same_src_port_rate" id="dst_host_same_src_port_rate" placeholder="dst_host_same_src_port_rate" required /><br><br>
+    
+          <label for="dst_host_same_srv_rate">The percentage of connections to the same service:</label>
+          <input type="text" name="dst_host_same_srv_rate" id="dst_host_same_srv_rate" placeholder="dst_host_same_srv_rate" required /><br><br>
+    
+          <label for="dst_host_srv_count">Number of connections with the same port number:</label>
+          <input type="text" name="dst_host_srv_count" id="dst_host_srv_count" placeholder="dst_host_srv_count" required /><br><br>
+    
+          <label for="flag">Status of the connection (Normal or Error):</label>
+          <select name="flag" id="flag">
+            <option value="0">Other</option>
+            <option value="1">S0</option>
+            <option value="2">SF</option>
+          </select><br><br>
+    
+          <label for="last_flag">Last Flag:</label>
+          <input type="text" name="last_flag" id="last_flag" placeholder="last_flag" required /><br><br>
+    
+          <label for="logged_in">1 if successfully logged in, 0 otherwise:</label>
+          <input type="text" name="logged_in" id="logged_in" placeholder="logged_in" required /><br><br>
+    
+          <label for="same_srv_rate">Percentage of connections to the same service:</label>
+          <input type="text" name="same_srv_rate" id="same_srv_rate" placeholder="same_srv_rate" required /><br><br>
+    
+          <label for="serror_rate">The percentage of connections that have activated the flag (4) s0, s1, s2 or s3, among the connections aggregated in count:</label>
+          <input type="text" name="serror_rate" id="serror_rate" placeholder="serror_rate" required /><br><br>
+    
+          <label for="service_http">Destination network service used HTTP or not:</label>
+          <select name="service_http" id="service_http">
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+          </select><br><br>
+    
+          <button type="submit" class="btn btn-primary btn-block btn-large">>Predict</button>
+        </form>
+        <br>
+        <div id="output"></div>
+      </div>
+    <footer>
+        <p>&copy; 2025 Detect The Threat. All Rights Reserved.</p>
+    </footer>
+    <script src="threat_detect_&_analyze.js"></script>
+    <script>
+        document.querySelector("#predictionForm").addEventListener("submit", function(event) {
+          event.preventDefault();  // Prevent form from submitting normally
+    
+          // Gather form data
+          var formData = {
+            attack: document.querySelector('[name="attack"]').value,
+            count: document.querySelector('[name="count"]').value,
+            dst_host_diff_srv_rate: document.querySelector('[name="dst_host_diff_srv_rate"]').value,
+            dst_host_same_src_port_rate: document.querySelector('[name="dst_host_same_src_port_rate"]').value,
+            dst_host_same_srv_rate: document.querySelector('[name="dst_host_same_srv_rate"]').value,
+            dst_host_srv_count: document.querySelector('[name="dst_host_srv_count"]').value,
+            flag: document.querySelector('[name="flag"]').value,
+            last_flag: document.querySelector('[name="last_flag"]').value,
+            logged_in: document.querySelector('[name="logged_in"]').value,
+            same_srv_rate: document.querySelector('[name="same_srv_rate"]').value,
+            serror_rate: document.querySelector('[name="serror_rate"]').value,
+            service_http: document.querySelector('[name="service_http"]').value
+          };
+    
+          // Send data as JSON to Flask server
+          fetch('http://127.0.0.1:5006/predict', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+          })
+          .then(response => response.json())
+          .then(data => {
+            // Display result
+            if (data.attack_class) {
+              document.querySelector('#output').innerHTML = "Attack Class: <b style='color:red;'>" + data.attack_class + "</b>";
+            } else {
+              document.querySelector('#output').textContent = "Error: " + data.error;
+            }
+          })
+          .catch(error => console.error('Error:', error));
+        });
+      </script>
+</body>
+
+</html>
